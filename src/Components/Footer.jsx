@@ -198,11 +198,7 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="flex relative flex-col md:flex-row items-center justify-between pt-7 text-sm">
           <span>
-            {" "}
-            <a href="/" className="hover:text-amber-400">
               {copyright}
-            </a>
-            {""}
           </span>
 
           <div className="flex flex-wrap justify-center gap-4 absolute md:static -top-10 md:top-auto">

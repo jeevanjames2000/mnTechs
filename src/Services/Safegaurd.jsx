@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom"; // Import Link for navigation
 import { ArrowRight } from "lucide-react";
 import ngrokAxiosInstance from "../Hooks/axiosInstance";
 
@@ -35,12 +36,15 @@ const Safeguard = () => {
               {card.title}
             </h3>
             <p className="text-gray-400 mb-8">{card.description}</p>
-            <button className="flex items-center gap-2 text-black font-semibold">
+            <Link
+              to={index === 0 ? "/demo" : "/contact"} // Use /demo for "Request a Free Demo", /contact for "Get In Touch"
+              className="flex items-center gap-2 text-black font-semibold"
+            >
               {index === 0 ? "Request a Free Demo" : "Get In Touch"}
               <span className="bg-gray-200 p-2 rounded-full hover:bg-orange-500 hover:text-white transition-all duration-300 transform hover:translate-x-1">
                 <ArrowRight size={16} />
               </span>
-            </button>
+            </Link>
           </div>
         ))}
       </div>

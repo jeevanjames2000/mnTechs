@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Home/Index";
 import NotFound from "./pages/NotFound";
-import Contact from "./pages/Contact";
+// import Contact from "./pages/Contact";
 import Services from "./pages/Services";
 import ContactWrapper from "./pages/CompWrapper";
 import Products from "./products/Products";

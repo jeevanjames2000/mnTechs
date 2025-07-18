@@ -32,7 +32,7 @@ Reach out — the future is just a message away.`} />
               <Form />
             </div>
 
-            <div className="lg:col-span-1 flex justify-end">
+            <div className="lg:col-span-1 flex lg:justify-end md:justify-left">
               <div className="w-full max-w-md space-y-6">
                 <div>
                   <div className="flex items-center space-x-2 mb-4">
