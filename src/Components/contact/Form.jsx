@@ -2,6 +2,86 @@ import React from "react";
 import useForm from "../../Hooks/useForm";
 import ngrokAxiosInstance from "../../Hooks/axiosInstance";
 
+// Utility function to convert number to words (Indian Rupees format)
+const numberToWords = (num) => {
+  if (!num || isNaN(num) || num <= 0) return "Zero Rupees";
+
+  const units = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+  ];
+  const teens = [
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+  const thousands = ["", "Thousand", "Lakh", "Crore"];
+
+  const convertLessThanThousand = (num) => {
+    let result = "";
+    if (num >= 100) {
+      result += units[Math.floor(num / 100)] + " Hundred ";
+      num %= 100;
+    }
+    if (num >= 20) {
+      result += tens[Math.floor(num / 10)] + " ";
+      num %= 10;
+    }
+    if (num >= 10 && num < 20) {
+      result += teens[num - 10] + " ";
+      num = 0;
+    }
+    if (num > 0) {
+      result += units[num] + " ";
+    }
+    return result;
+  };
+
+  let n = Math.floor(num);
+  if (n > 10000000) return "Exceeds 1 Crore"; // Handle budget limit
+
+  let result = "";
+  let thousandIndex = 0;
+
+  while (n > 0) {
+    if (n % 1000 !== 0) {
+      let part = convertLessThanThousand(n % 1000);
+      result = part + thousands[thousandIndex] + " " + result;
+    }
+    n = Math.floor(n / 1000);
+    thousandIndex++;
+  }
+
+  return result.trim() + " Rupees";
+};
+
 const Form = () => {
   const { formData, handleChange, setFormData } = useForm({
     firstName: "",
@@ -15,8 +95,21 @@ const Form = () => {
     ProjectBudget: "",
   });
 
+  // Regular expression for alphabetic characters and spaces only
+  const namePattern = /^[A-Za-z\s]*$/;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate firstName and lastName
+    if (!namePattern.test(formData.firstName)) {
+      alert("First Name should contain only letters and spaces.");
+      return;
+    }
+    if (!namePattern.test(formData.lastName)) {
+      alert("Last Name should contain only letters and spaces.");
+      return;
+    }
 
     // Validate phone number
     const phonePattern = /^[6-9][0-9]{9}$/;
@@ -25,7 +118,7 @@ const Form = () => {
       return;
     }
 
-    // Validate budget (let’s say limit is ₹1 crore)
+    // Validate budget (limit is ₹1 crore)
     const maxBudget = 10000000;
     if (Number(formData.ProjectBudget) > maxBudget) {
       alert("Project budget should not exceed ₹1,00,00,000 (1 crore)");
@@ -33,14 +126,17 @@ const Form = () => {
     }
 
     try {
-      const response = await ngrokAxiosInstance.post('/reach/create_reach_us', formData);
+      const response = await ngrokAxiosInstance.post(
+        "/reach/create_reach_us",
+        formData
+      );
 
-      console.log('Server response:', response.data);
+      console.log("Server response:", response.data);
 
       if (response.status >= 200 && response.status < 300) {
-        alert('Form submitted successfully!');
+        alert("Form submitted successfully!");
 
-        // ✅ Clear form data after successful submission
+        // Clear form data after successful submission
         setFormData({
           firstName: "",
           lastName: "",
@@ -53,11 +149,26 @@ const Form = () => {
           ProjectBudget: "",
         });
       } else {
-        alert('Submission failed: ' + response.data.error);
+        alert("Submission failed: " + response.data.error);
       }
     } catch (error) {
-      console.error('Error submitting form:', error.response ? error.response.data : error.message);
-      alert(error.response?.data?.error || 'An error occurred.');
+      console.error(
+        "Error submitting form:",
+        error.response ? error.response.data : error.message
+      );
+      alert(error.response?.data?.error || "An error occurred.");
+    }
+  };
+
+  // Custom handleChange to filter non-alphabetic characters for name fields
+  const handleNameChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "firstName" || name === "lastName") {
+      if (namePattern.test(value)) {
+        handleChange(e);
+      }
+    } else {
+      handleChange(e);
     }
   };
 
@@ -77,7 +188,13 @@ const Form = () => {
               name={field}
               placeholder={field === "firstName" ? "Joe" : "Smith"}
               value={formData[field]}
-              onChange={handleChange}
+              onChange={handleNameChange}
+              pattern="[A-Za-z\s]*"
+              onKeyPress={(e) => {
+                if (!namePattern.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               className={inputClass}
             />
           </div>
@@ -170,7 +287,7 @@ const Form = () => {
           Project Budget
         </label>
         <input
-          type="num"
+          type="number"
           name="ProjectBudget"
           placeholder="Enter your budget"
           value={formData.ProjectBudget}
@@ -182,6 +299,11 @@ const Form = () => {
           }}
           className={inputClass}
         />
+        <p className="text-sm text-gray-500 mt-2">
+          {formData.ProjectBudget
+            ? numberToWords(Number(formData.ProjectBudget))
+            : "Please enter a budget"}
+        </p>
       </div>
 
       <button

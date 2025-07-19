@@ -1,4 +1,4 @@
-  import { useState } from "react";
+import { useState } from "react";
 import ngrokAxiosInstance from "../Hooks/axiosInstance";
 
 const Contacts = () => {
@@ -11,7 +11,50 @@ const Contacts = () => {
     file: null,
   });
 
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+
   const [submitting, setSubmitting] = useState(false);
+
+  const validateForm = () => {
+    const newErrors = { name: "", email: "", phone: "" };
+    let isValid = true;
+
+    // Name validation: required, min 2 chars, letters and spaces only
+    if (!formData.name) {
+      newErrors.name = "Name is required";
+      isValid = false;
+    } else if (formData.name.length < 2) {
+      newErrors.name = "Name must be at least 2 characters long";
+      isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
+      newErrors.name = "Name can only contain letters and spaces";
+      isValid = false;
+    }
+
+    // Email validation: required, valid email format
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+      isValid = false;
+    } else if (
+      !/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(formData.email)
+    ) {
+      newErrors.email = "Enter a valid email address";
+      isValid = false;
+    }
+
+    // Phone validation: optional, but if provided, must be 10-digit Indian number
+    if (formData.phone && !/^[6-9][0-9]{9}$/.test(formData.phone)) {
+      newErrors.phone = "Enter a valid 10-digit phone number starting with 6-9";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -19,12 +62,19 @@ const Contacts = () => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+
+    // Clear error for the field being edited
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
 
+    if (!validateForm()) {
+      return; // Stop submission if validation fails
+    }
+
+    setSubmitting(true);
     console.log("Submitting form data:", formData);
 
     try {
@@ -45,6 +95,7 @@ const Contacts = () => {
           agreeToUpdates: false,
           file: null,
         });
+        setErrors({ name: "", email: "", phone: "" });
       } else {
         alert(response.data.error || "Something went wrong.");
       }
@@ -80,9 +131,14 @@ const Contacts = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-transparent border-b border-gray-600 focus:outline-none text-white"
+                  className={`w-full px-4 py-3 bg-transparent border-b ${
+                    errors.name ? "border-red-500" : "border-gray-600"
+                  } focus:outline-none text-white`}
                   required
                 />
+                {errors.name && (
+                  <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-small mb-2">
@@ -94,11 +150,14 @@ const Contacts = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-transparent border-b border-gray-600 focus:outline-none text-white"
+                  className={`w-full px-4 py-3 bg-transparent border-b ${
+                    errors.email ? "border-red-500" : "border-gray-600"
+                  } focus:outline-none text-white`}
                   required
-                  pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-                  title="Enter a valid email address"
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-small mb-2">
@@ -113,11 +172,14 @@ const Contacts = () => {
                     e.target.value = e.target.value.replace(/\D/g, "");
                   }}
                   inputMode="numeric"
-                  pattern="[6-9][0-9]{9}"
                   maxLength={10}
-                  title="Enter a valid 10-digit phone number starting with 6-9"
-                  className="w-full px-4 py-3 bg-transparent border-b border-gray-600 focus:outline-none text-white"
+                  className={`w-full px-4 py-3 bg-transparent border-b ${
+                    errors.phone ? "border-red-500" : "border-gray-600"
+                  } focus:outline-none text-white`}
                 />
+                {errors.phone && (
+                  <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                )}
               </div>
             </div>
 
